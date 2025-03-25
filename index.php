@@ -12,15 +12,15 @@
         }
         body {
             font-family: 'Courier New', Courier, monospace;
-            background-color: #1e1e2f;
-            color: #ffffff;
+            background-color: var(--background-color, #1e1e2f);
+            color: var(--text-color, #ffffff);
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
         }
         header {
-            background-color: #2b2b3d;
+            background-color: var(--header-background, #2b2b3d);
             padding: 10px 20px;
             display: flex;
             justify-content: space-between;
@@ -31,14 +31,28 @@
             font-size: 1.5rem;
             color: #61dafb;
         }
+        header .settings {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        header select, header input {
+            padding: 5px 10px;
+            font-size: 14px;
+            color: #ffffff;
+            background-color: #444;
+            border: 1px solid #666;
+            border-radius: 5px;
+        }
         textarea {
             flex: 1;
             width: 100%;
             padding: 20px;
-            font-size: 16px;
+            font-size: var(--font-size, 16px);
+            font-family: var(--font-family, 'Courier New'), monospace;
             border: none;
-            background-color: #1e1e2f;
-            color: #ffffff;
+            background-color: var(--editor-background, #1e1e2f);
+            color: var(--editor-text-color, #ffffff);
             resize: none;
             outline: none;
         }
@@ -91,6 +105,21 @@
 <body>
     <header>
         <h1>Editor de Código PHP Online</h1>
+        <div class="settings">
+            <label for="theme">Tema:</label>
+            <select id="theme" onchange="updateTheme()">
+                <option value="dark">Escuro</option>
+                <option value="light">Claro</option>
+            </select>
+            <label for="fontSize">Tamanho da Fonte:</label>
+            <input type="number" id="fontSize" value="16" min="12" max="24" onchange="updateFontSize()" />
+            <label for="fontFamily">Fonte:</label>
+            <select id="fontFamily" onchange="updateFontFamily()">
+                <option value="'Courier New', monospace">Courier New</option>
+                <option value="monospace">Monospace</option>
+                <option value="Arial, sans-serif">Arial</option>
+            </select>
+        </div>
     </header>
     <form method="POST">
         <textarea name="code" id="code" placeholder="Digite seu código PHP aqui..."><?php echo isset($_POST['code']) ? htmlspecialchars($_POST['code']) : ''; ?></textarea>
@@ -139,14 +168,44 @@
     </div>
 
     <script>
-        // Função para limpar o editor
+        // Função para limpar o código
         function clearCode() {
             document.getElementById('code').value = '';
         }
 
-        // Função para fechar a saída
+        // Função para fechar o painel de saída
         function closeOutput() {
             document.getElementById('outputBox').classList.remove('visible');
+        }
+
+        // Função para aplicar o tema
+        function updateTheme() {
+            const theme = document.getElementById('theme').value;
+            if (theme === 'light') {
+                document.documentElement.style.setProperty('--background-color', '#ffffff');
+                document.documentElement.style.setProperty('--text-color', '#000000');
+                document.documentElement.style.setProperty('--header-background', '#f5f5f5');
+                document.documentElement.style.setProperty('--editor-background', '#fdfdfd');
+                document.documentElement.style.setProperty('--editor-text-color', '#000000');
+            } else {
+                document.documentElement.style.setProperty('--background-color', '#1e1e2f');
+                document.documentElement.style.setProperty('--text-color', '#ffffff');
+                document.documentElement.style.setProperty('--header-background', '#2b2b3d');
+                document.documentElement.style.setProperty('--editor-background', '#1e1e2f');
+                document.documentElement.style.setProperty('--editor-text-color', '#ffffff');
+            }
+        }
+
+        // Função para alterar o tamanho da fonte
+        function updateFontSize() {
+            const fontSize = document.getElementById('fontSize').value + 'px';
+            document.documentElement.style.setProperty('--font-size', fontSize);
+        }
+
+        // Função para alterar a fonte
+        function updateFontFamily() {
+            const fontFamily = document.getElementById('fontFamily').value;
+            document.documentElement.style.setProperty('--font-family', fontFamily);
         }
 
         // Mostrar a saída automaticamente (se existir)
