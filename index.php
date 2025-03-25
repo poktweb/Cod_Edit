@@ -84,21 +84,47 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(30, 30, 47, 0.9);
-            color: #ffffff;
-            font-size: 16px;
-            font-family: 'Courier New', Courier, monospace;
-            white-space: pre-wrap;
-            overflow-y: auto;
-            padding: 20px;
-            display: none;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
             z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s ease-in-out;
         }
         .output.visible {
-            display: block;
+            visibility: visible;
+            opacity: 1;
         }
-        .output.error {
-            color: #ff6b6b;
+        .output-content {
+            background-color: var(--editor-background, #1e1e2f);
+            color: var(--editor-text-color, #ffffff);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            border: 2px solid var(--output-border-color, #61dafb);
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        .output-content.error {
+            border-color: #ff6b6b;
+        }
+        .output button.close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ff6b6b;
+            color: #ffffff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .output button.close:hover {
+            background-color: #e04848;
         }
     </style>
 </head>
@@ -121,7 +147,7 @@
             </select>
         </div>
     </header>
-    <form method="POST">
+    <form method="POST" id="codeForm">
         <textarea name="code" id="code" placeholder="Digite seu código PHP aqui..."><?php echo isset($_POST['code']) ? htmlspecialchars($_POST['code']) : ''; ?></textarea>
         <div class="button-group">
             <button type="submit">Executar Código</button>
@@ -129,8 +155,8 @@
         </div>
     </form>
     <div class="output" id="outputBox">
-        <button style="position: absolute; top: 10px; right: 10px; background-color: #ff6b6b; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;" onclick="closeOutput()">Fechar</button>
-        <div id="outputContent">
+        <button class="close" onclick="closeOutput()">Fechar</button>
+        <div class="output-content" id="outputContent">
             <?php
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $code = $_POST['code'] ?? '';
@@ -139,7 +165,7 @@
                 $proibidos = ['exec', 'shell_exec', 'system', 'passthru', 'proc_open', 'popen', 'curl_exec', 'curl_multi_exec', 'parse_ini_file', 'show_source'];
                 foreach ($proibidos as $funcao) {
                     if (stripos($code, $funcao) !== false) {
-                        echo '<div class="output error">Erro: Uso de função proibida detectado!</div>';
+                        echo '<div class="output-content error">Erro: Uso de função proibida detectado!</div>';
                         exit;
                     }
                 }
@@ -153,7 +179,7 @@
                 try {
                     include $tempFile;
                 } catch (Throwable $e) {
-                    echo '<div class="output error">Erro: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                    echo '<div class="output-content error">Erro: ' . htmlspecialchars($e->getMessage()) . '</div>';
                 }
                 $output = ob_get_clean();
 
@@ -178,6 +204,17 @@
             document.getElementById('outputBox').classList.remove('visible');
         }
 
+        // Mostrar a saída automaticamente (se existir)
+        document.addEventListener('DOMContentLoaded', function () {
+            const outputContent = document.getElementById('outputContent');
+            const outputBox = document.getElementById('outputBox');
+
+            // Verifica se há conteúdo gerado; se sim, mostra o painel
+            if (outputContent.innerHTML.trim()) {
+                outputBox.classList.add('visible');
+            }
+        });
+
         // Função para aplicar o tema
         function updateTheme() {
             const theme = document.getElementById('theme').value;
@@ -187,12 +224,14 @@
                 document.documentElement.style.setProperty('--header-background', '#f5f5f5');
                 document.documentElement.style.setProperty('--editor-background', '#fdfdfd');
                 document.documentElement.style.setProperty('--editor-text-color', '#000000');
+                document.documentElement.style.setProperty('--output-border-color', '#61dafb');
             } else {
                 document.documentElement.style.setProperty('--background-color', '#1e1e2f');
                 document.documentElement.style.setProperty('--text-color', '#ffffff');
                 document.documentElement.style.setProperty('--header-background', '#2b2b3d');
                 document.documentElement.style.setProperty('--editor-background', '#1e1e2f');
                 document.documentElement.style.setProperty('--editor-text-color', '#ffffff');
+                document.documentElement.style.setProperty('--output-border-color', '#61dafb');
             }
         }
 
@@ -207,14 +246,6 @@
             const fontFamily = document.getElementById('fontFamily').value;
             document.documentElement.style.setProperty('--font-family', fontFamily);
         }
-
-        // Mostrar a saída automaticamente (se existir)
-        document.addEventListener('DOMContentLoaded', function () {
-            const outputBox = document.getElementById('outputBox');
-            if (outputBox.innerText.trim()) {
-                outputBox.classList.add('visible');
-            }
-        });
     </script>
 </body>
 </html>
